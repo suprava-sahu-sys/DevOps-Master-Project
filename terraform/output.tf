@@ -1,3 +1,3 @@
-output "codepipeline_devops" {
-  value = aws_codepipeline.devops.name # Update "my_pipeline" with your actual resource name.
+output "pipeline_name" {
+  value = aws_codepipeline.pipeline.name # Update "my_pipeline" with your actual resource name.
 }
