@@ -5,9 +5,12 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
+      - echo Installing dependencies...
       - npm install
+
   build:
     commands:
+      - echo Building project...
       - npm run build
       - cp appspec.yml dist/
       - mkdir -p dist/scripts
