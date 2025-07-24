@@ -2,6 +2,7 @@
   "name": "my-app",
   "version": "1.0.0",
   "scripts": {
-    "start": "node index.js"
-  }
+  "start": "react-scripts start",
+  "build": "react-scripts build"
 }
+
