@@ -6,7 +6,7 @@ provider "aws" {
 # S3 Artifact Bucket
 # --------------------
 resource "aws_s3_bucket" "artifact_bucket" {
-  bucket        = "${var.project_name}-artifacts"
+  bucket        = var.bucket_name
   force_destroy = true
 }
 
@@ -21,12 +21,7 @@ resource "aws_s3_bucket_versioning" "artifact_versioning" {
 # IAM Roles and Policies
 # --------------------
 
-## CodePipeline Role
-resource "aws_iam_role" "codepipeline_role" {
-  name = "${var.project_name}-codepipeline-role"
-  assume_role_policy = data.aws_iam_policy_document.codepipeline_assume.json
-}
-
+# CodePipeline Role
 data "aws_iam_policy_document" "codepipeline_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -37,17 +32,17 @@ data "aws_iam_policy_document" "codepipeline_assume" {
   }
 }
 
+resource "aws_iam_role" "codepipeline_role" {
+  name               = "${var.project_name}-codepipeline-role"
+  assume_role_policy = data.aws_iam_policy_document.codepipeline_assume.json
+}
+
 resource "aws_iam_role_policy_attachment" "codepipeline_policy_attach" {
   role       = aws_iam_role.codepipeline_role.name
   policy_arn = "arn:aws:iam::aws:policy/AWSCodePipelineFullAccess"
 }
 
-## CodeBuild Role
-resource "aws_iam_role" "codebuild_role" {
-  name = "${var.project_name}-codebuild-role"
-  assume_role_policy = data.aws_iam_policy_document.codebuild_assume.json
-}
-
+# CodeBuild Role
 data "aws_iam_policy_document" "codebuild_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -58,17 +53,17 @@ data "aws_iam_policy_document" "codebuild_assume" {
   }
 }
 
+resource "aws_iam_role" "codebuild_role" {
+  name               = "${var.project_name}-codebuild-role"
+  assume_role_policy = data.aws_iam_policy_document.codebuild_assume.json
+}
+
 resource "aws_iam_role_policy_attachment" "codebuild_policy_attach" {
   role       = aws_iam_role.codebuild_role.name
   policy_arn = "arn:aws:iam::aws:policy/AWSCodeBuildDeveloperAccess"
 }
 
-## CodeDeploy Role
-resource "aws_iam_role" "codedeploy_role" {
-  name = "${var.project_name}-codedeploy-role"
-  assume_role_policy = data.aws_iam_policy_document.codedeploy_assume.json
-}
-
+# CodeDeploy Role
 data "aws_iam_policy_document" "codedeploy_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -79,46 +74,43 @@ data "aws_iam_policy_document" "codedeploy_assume" {
   }
 }
 
+resource "aws_iam_role" "codedeploy_role" {
+  name               = "${var.project_name}-codedeploy-role"
+  assume_role_policy = data.aws_iam_policy_document.codedeploy_assume.json
+}
+
 resource "aws_iam_role_policy_attachment" "codedeploy_policy_attach" {
   role       = aws_iam_role.codedeploy_role.name
   policy_arn = "arn:aws:iam::aws:policy/AWSCodeDeployFullAccess"
 }
 
 # --------------------
-# CodeBuild Project
+# EC2 Instance for Deployment
 # --------------------
-resource "aws_codebuild_project" "devsecops_build" {
-  name          = "${var.project_name}-build"
-  description   = "Build project for DevSecOps app"
-  service_role  = aws_iam_role.codebuild_role.arn
-  build_timeout = 20
+resource "aws_instance" "app_server" {
+  ami                         = var.ami_id
+  instance_type               = var.instance_type
+  key_name                    = var.key_name
+  associate_public_ip_address = true
 
-  artifacts {
-    type = "CODEPIPELINE"
+  tags = {
+    (var.instance_tag_key) = var.instance_tag_value
   }
 
-  environment {
-    compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = var.codebuild_image
-    type                        = "LINUX_CONTAINER"
-    privileged_mode             = true
-    image_pull_credentials_type = "CODEBUILD"
-  }
-
-  source {
-    type      = "CODEPIPELINE"
-    buildspec = "buildspec.yml"
-  }
-
-  logs_config {
-    cloudwatch_logs {
-      status = "ENABLED"
-    }
-  }
+  user_data = <<-EOF
+              #!/bin/bash
+              apt update -y
+              apt install -y ruby wget
+              cd /home/ubuntu
+              wget https://aws-codedeploy-${var.aws_region}.s3.${var.aws_region}.amazonaws.com/latest/install
+              chmod +x ./install
+              ./install auto
+              systemctl start codedeploy-agent
+              EOF
 }
 
 # --------------------
-# CodeDeploy
+# CodeDeploy Application & Group
 # --------------------
 resource "aws_codedeploy_app" "devsecops_app" {
   name             = "${var.project_name}-app"
@@ -135,9 +127,51 @@ resource "aws_codedeploy_deployment_group" "devsecops_group" {
     deployment_type   = "BLUE_GREEN"
   }
 
+  ec2_tag_set {
+    ec2_tag_filter {
+      key   = var.instance_tag_key
+      type  = "KEY_AND_VALUE"
+      value = var.instance_tag_value
+    }
+  }
+
   auto_rollback_configuration {
     enabled = true
     events  = ["DEPLOYMENT_FAILURE"]
+  }
+
+  deployment_config_name = "CodeDeployDefault.AllAtOnce"
+}
+
+# --------------------
+# CodeBuild
+# --------------------
+resource "aws_codebuild_project" "devsecops_build" {
+  name          = "${var.project_name}-build"
+  description   = "Build project for ${var.project_name}"
+  service_role  = aws_iam_role.codebuild_role.arn
+  build_timeout = 20
+
+  artifacts {
+    type = "CODEPIPELINE"
+  }
+
+  environment {
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = var.codebuild_image
+    type                        = "LINUX_CONTAINER"
+    privileged_mode             = true
+  }
+
+  source {
+    type      = "CODEPIPELINE"
+    buildspec = "buildspec.yml"
+  }
+
+  logs_config {
+    cloudwatch_logs {
+      status = "ENABLED"
+    }
   }
 }
 
@@ -163,9 +197,9 @@ resource "aws_codepipeline" "devsecops_pipeline" {
       version          = "1"
       output_artifacts = ["source_output"]
       configuration = {
-        ConnectionArn     = var.codestar_connection_arn
-        FullRepositoryId  = "${var.github_owner}/${var.github_repo}"
-        BranchName        = var.github_branch
+        ConnectionArn    = var.codestar_connection_arn
+        FullRepositoryId = "${var.github_owner}/${var.github_repo}"
+        BranchName       = var.github_branch
       }
     }
   }
