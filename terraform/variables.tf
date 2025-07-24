@@ -1,46 +1,34 @@
-variable "aws_region" {
-  description = "AWS region to deploy resources"
-  default     = "us-east-1"
-}
-
-variable "backend_bucket" {
-  description = "S3 bucket for Terraform remote state"
+variable "bucket_name" {
+  description = "Unique S3 bucket name for storing artifacts"
   type        = string
 }
 
-variable "backend_lock_table" {
-  description = "DynamoDB table for state locking"
+variable "ami_id" {
+  description = "AMI ID for EC2 instance"
   type        = string
 }
 
-variable "project_name" {
-  description = "Project name prefix"
-  type        = string
-  default     = "DevSecOpsProject"
+variable "instance_type" {
+  description = "EC2 instance type"
+  default     = "t3.micro"
 }
 
-variable "codebuild_image" {
-  description = "CodeBuild Docker image to use"
-  default     = "aws/codebuild/standard:6.0"
-}
-
-variable "github_owner" {
-  description = "GitHub owner or organization"
+variable "key_name" {
+  description = "SSH key name to access EC2"
   type        = string
 }
 
-variable "github_repo" {
-  description = "GitHub repository name"
+variable "github_token" {
+  description = "GitHub Personal Access Token for CodePipeline"
   type        = string
 }
 
-variable "github_branch" {
-  description = "GitHub branch to track"
-  type        = string
-  default     = "main"
+variable "instance_tag_key" {
+  type    = string
+  default = "Name"
 }
 
-variable "codestar_connection_arn" {
-  description = "CodeStar connection ARN to GitHub"
-  type        = string
+variable "instance_tag_value" {
+  type    = string
+  default = "MyAppServer"
 }
