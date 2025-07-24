@@ -9,6 +9,6 @@ sudo systemctl enable httpd
 sudo systemctl restart httpd
 
 # Ensure permissions are correct (optional)
-sudo chmod -R 755 /var/www/html
+sudo chmod -R 755 /home/ec2-user/myapp
 
 echo "Deployment finished."
