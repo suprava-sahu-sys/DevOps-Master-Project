@@ -11,12 +11,12 @@ func TestTerraformPipeline(t *testing.T) {
   t.Parallel()
 
   tf := &terraform.Options{
-    TerraformDir: "../terraform", // Adjust path as per your directory
+    TerraformDir: "../terraform", // Path to your Terraform config
   }
 
   defer terraform.Destroy(t, tf)             // Cleanup resources after test
   terraform.InitAndApply(t, tf)             // Run terraform init + apply
 
-  pipelineName := terraform.Output(t, tf, "codepipeline_devops") // Replace with actual output variable name
+  pipelineName := terraform.Output(t, tf, "codepipeline_name") // Updated to match output.tf
   assert.NotEmpty(t, pipelineName)
 }
