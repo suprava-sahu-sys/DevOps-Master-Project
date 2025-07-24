@@ -1,52 +1,46 @@
 variable "aws_region" {
-  default = "eu-north-1"
+  description = "AWS region to deploy resources"
+  default     = "us-east-1"
 }
 
-variable "project_name" {
-  default = "MyApp"
-}
-
-variable "github_token" {
-  description = "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"
+variable "backend_bucket" {
+  description = "S3 bucket for Terraform remote state"
   type        = string
 }
 
+variable "backend_lock_table" {
+  description = "DynamoDB table for state locking"
+  type        = string
+}
+
+variable "project_name" {
+  description = "Project name prefix"
+  type        = string
+  default     = "DevSecOpsProject"
+}
+
+variable "codebuild_image" {
+  description = "CodeBuild Docker image to use"
+  default     = "aws/codebuild/standard:6.0"
+}
+
 variable "github_owner" {
-  description = "ayushdash1302"
+  description = "GitHub owner or organization"
   type        = string
 }
 
 variable "github_repo" {
-  description = "DevOps-Master-Project"
+  description = "GitHub repository name"
   type        = string
 }
 
 variable "github_branch" {
-  default = "main"
-}
-
-variable "bucket_name" {
-  description = "Artifact bucket name"
+  description = "GitHub branch to track"
   type        = string
+  default     = "main"
 }
 
-variable "ami_id" {
-  default     = "ami-00c8ac9147e19828e" # Amazon Linux 2023
-}
-
-variable "instance_type" {
-  default = "t3.micro"
-}
-
-variable "key_name" {
-  description = "Project"
+variable "codestar_connection_arn" {
+  description = "CodeStar connection ARN to GitHub"
   type        = string
-}
-
-variable "instance_tag_key" {
-  default = "Devops"
-}
-
-variable "instance_tag_value" {
-  default = "webserver"
 }
