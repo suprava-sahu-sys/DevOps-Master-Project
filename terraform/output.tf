@@ -8,6 +8,7 @@ output "codepipeline_name" {
   value       = aws_codepipeline.devsecops_pipeline.name
 }
 
+
 output "codebuild_project" {
   description = "CodeBuild project name"
   value       = aws_codebuild_project.devsecops_build.name
