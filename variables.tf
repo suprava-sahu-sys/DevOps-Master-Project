@@ -3,5 +3,5 @@ variable "aws_region" {
 }
 
 variable "cluster_name" {
-  default = "devsecops-eks-cluster-ayush"
+  default = "devsecops-eks-cluster"
 }
