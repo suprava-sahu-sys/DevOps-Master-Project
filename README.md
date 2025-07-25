@@ -394,5 +394,3 @@ Would you like this converted into a **PNG/SVG diagram** or **mermaid.js** block
 
 This project is licensed under the MIT License.
 
-```
-
