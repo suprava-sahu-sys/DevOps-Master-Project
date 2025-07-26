@@ -381,14 +381,6 @@ DevSecOps-Masters-Project/
 | **6. Docker Build**      | Build and push image to Docker Hub                  |
 | **7. Kubernetes Deploy** | Apply manifests to deploy app on cluster            |
 
----
-
-### 🧩 Add This as an Image?
-
-Would you like this converted into a **PNG/SVG diagram** or **mermaid.js** block for GitHub display? I can generate that visual too.
-
----
-
 
 ## 🙋‍♂️ Author
 
