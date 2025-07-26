@@ -1,11 +1,15 @@
 variable "aws_region" {
-  description = "AWS region to deploy resources"
+  description = "AWS region"
   type        = string
   default     = "eu-north-1"
 }
 
 variable "bucket_name" {
-  description = "The name of the S3 bucket"
+  description = "S3 bucket name"
   type        = string
-  default     = "ayush-test-tfsec-bucket"
+}
+
+variable "log_bucket_name" {
+  description = "Target bucket for logs (must already exist)"
+  type        = string
 }
