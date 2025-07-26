@@ -97,14 +97,26 @@ cd DevSecOps-Masters-Project/terraform
 
 ### Step 2: Update Terraform Variables
 
-Edit `variables.tf` or create a `terraform.tfvars` file with:
+Create a `terraform.tfvars` file with:
 
 ```hcl
-github_repo_name   = "your-repo-name"
-github_owner       = "your-github-username"
-codestar_connection_arn = "arn:aws:codestar-connections:..."
-ec2_instance_id    = "i-xxxxxxx"
-region             = "ap-south-1"
+project_name         = "my-devops-project"
+bucket_name = "my-devops-bucket-20250723-ayush"
+aws_region           = "eu-north-1"
+ami_id               = "ami-0437df53acb2bbbfd"
+instance_type        = "t3.micro"
+key_name             = "Project"
+
+github_owner         = "ayushdash1302"
+github_repo          = "DevOps-Master-Project"
+github_branch        = "main"
+github_token         = "ghp_.............."
+
+codestar_connection_arn = "arn:aws:codeconnections:eu-north-1:429367298132:connection/87c58575-5dc3-4d3f-9a7f-42e9d54edd08"
+
+instance_tag_key     = "Name"
+instance_tag_value   = "MyAppServer"
+
 ```
 
 ---
