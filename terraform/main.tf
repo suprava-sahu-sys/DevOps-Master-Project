@@ -51,15 +51,14 @@ resource "aws_iam_role_policy" "codepipeline_inline_policy" {
           "codebuild:*",
           "codedeploy:*",
           "s3:*",
-          "iam:PassRole"
+          "iam:PassRole",
+          "codestar-connections:UseConnection"
         ],
         Resource = "*"
       }
     ]
   })
 }
-
-
 
 # CodeBuild Role
 data "aws_iam_policy_document" "codebuild_assume" {
@@ -80,6 +79,31 @@ resource "aws_iam_role" "codebuild_role" {
 resource "aws_iam_role_policy_attachment" "codebuild_policy_attach" {
   role       = aws_iam_role.codebuild_role.name
   policy_arn = "arn:aws:iam::aws:policy/AWSCodeBuildDeveloperAccess"
+}
+
+resource "aws_iam_role_policy" "codebuild_inline_policy" {
+  name = "codebuild-inline-policy"
+  role = aws_iam_role.codebuild_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:*",
+          "s3:*",
+          "codebuild:*",
+          "ecr:*",
+          "ec2:*",
+          "ssm:GetParameters",
+          "ssm:GetParameter",
+          "iam:PassRole"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
 }
 
 # CodeDeploy Role
@@ -103,14 +127,61 @@ resource "aws_iam_role_policy_attachment" "codedeploy_policy_attach" {
   policy_arn = "arn:aws:iam::aws:policy/AWSCodeDeployFullAccess"
 }
 
+resource "aws_iam_role_policy" "codedeploy_inline_policy" {
+  name = "codedeploy-inline-policy"
+  role = aws_iam_role.codedeploy_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ec2:Describe*",
+          "autoscaling:Describe*",
+          "tag:GetTags"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# EC2 Role & Instance Profile
+resource "aws_iam_role" "ec2_instance_role" {
+  name = "${var.project_name}-ec2-instance-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      },
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_s3_access" {
+  role       = aws_iam_role.ec2_instance_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+}
+
+resource "aws_iam_instance_profile" "ec2_profile" {
+  name = "${var.project_name}-instance-profile"
+  role = aws_iam_role.ec2_instance_role.name
+}
+
 # --------------------
-# EC2 Instance for Deployment
+# EC2 Instance
 # --------------------
 resource "aws_instance" "app_server" {
   ami                         = var.ami_id
   instance_type               = var.instance_type
   key_name                    = var.key_name
   associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
 
   tags = {
     (var.instance_tag_key) = var.instance_tag_value
@@ -129,7 +200,7 @@ resource "aws_instance" "app_server" {
 }
 
 # --------------------
-# CodeDeploy Application & Group
+# CodeDeploy
 # --------------------
 resource "aws_codedeploy_app" "devsecops_app" {
   name             = "${var.project_name}-app"
@@ -142,10 +213,9 @@ resource "aws_codedeploy_deployment_group" "devsecops_group" {
   service_role_arn      = aws_iam_role.codedeploy_role.arn
 
   deployment_style {
-  deployment_option = "WITHOUT_TRAFFIC_CONTROL"
-  deployment_type   = "IN_PLACE"
-}
-
+    deployment_option = "WITHOUT_TRAFFIC_CONTROL"
+    deployment_type   = "IN_PLACE"
+  }
 
   ec2_tag_set {
     ec2_tag_filter {
@@ -177,10 +247,10 @@ resource "aws_codebuild_project" "devsecops_build" {
   }
 
   environment {
-    compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = var.codebuild_image
-    type                        = "LINUX_CONTAINER"
-    privileged_mode             = true
+    compute_type      = "BUILD_GENERAL1_SMALL"
+    image             = var.codebuild_image
+    type              = "LINUX_CONTAINER"
+    privileged_mode   = true
   }
 
   source {
