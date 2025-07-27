@@ -49,9 +49,10 @@ variable "github_token" {
 }
 
 variable "codestar_connection_arn" {
-  description = "ARN of the CodeStar GitHub connection"
-  type        = string
+  type    = string
+  default = "arn:aws:codeconnections:eu-north-1:429367298132:connection/87c58575-5dc3-4d3f-9a7f-42e9d54edd08"
 }
+
 
 variable "instance_tag_key" {
   description = "Key used for tagging EC2 instance"
