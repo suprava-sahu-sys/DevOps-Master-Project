@@ -1,30 +1,71 @@
-output "artifact_bucket" {
-  description = "S3 artifact bucket name"
-  value       = aws_s3_bucket.artifact_bucket.id
+variable "aws_region" {
+  description = "AWS region to deploy resources"
+  type        = string
 }
 
-output "codepipeline_name" {
-  description = "Name of the CodePipeline"
-  value       = aws_codepipeline.devsecops_pipeline.name
+variable "project_name" {
+  description = "Project name prefix"
+  type        = string
 }
 
-
-output "codebuild_project" {
-  description = "CodeBuild project name"
-  value       = aws_codebuild_project.devsecops_build.name
+variable "bucket_name" {
+  description = "Unique S3 bucket name for storing artifacts"
+  type        = string
 }
 
-output "codedeploy_application" {
-  description = "CodeDeploy application name"
-  value       = aws_codedeploy_app.devsecops_app.name
+variable "ami_id" {
+  description = "AMI ID for EC2 instance"
+  type        = string
 }
 
-output "codedeploy_deployment_group" {
-  description = "CodeDeploy deployment group name"
-  value       = aws_codedeploy_deployment_group.devsecops_group.deployment_group_name
+variable "instance_type" {
+  description = "EC2 instance type"
+  default     = "t3.micro"
 }
 
-output "ec2_instance_public_ip" {
-  description = "Public IP of the deployed EC2 instance"
-  value       = aws_instance.app_server.public_ip
+variable "key_name" {
+  description = "EC2 key pair name"
+  type        = string
+}
+
+variable "github_owner" {
+  description = "GitHub username"
+  type        = string
+}
+
+variable "github_repo" {
+  description = "GitHub repo containing app code"
+  type        = string
+}
+
+variable "github_branch" {
+  description = "GitHub branch to track"
+  type        = string
+}
+
+variable "github_token" {
+  description = "GitHub Personal Access Token (unused in Terraform but may be required in CI/CD)"
+  type        = string
+}
+
+variable "codestar_connection_arn" {
+  description = "ARN of the CodeStar GitHub connection"
+  type        = string
+}
+
+variable "instance_tag_key" {
+  description = "Key used for tagging EC2 instance"
+  type        = string
+  default     = "Name"
+}
+
+variable "instance_tag_value" {
+  description = "Value used for tagging EC2 instance"
+  type        = string
+  default     = "MyAppServer"
+}
+
+variable "codebuild_image" {
+  description = "Docker image for CodeBuild environment"
+  default     = "aws/codebuild/standard:6.0"
 }
