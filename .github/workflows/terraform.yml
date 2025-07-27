@@ -1,0 +1,46 @@
+name: Terraform Pipeline
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  terraform:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+
+    env:
+      TF_VAR_aws_region: "eu-north-1"
+      TF_VAR_project_name: "devsecops-pipeline"
+      TF_VAR_bucket_name: "my-unique-s3-bucket-name"
+      TF_VAR_ami_id: "ami-0abcdef1234567890"
+      TF_VAR_instance_type: "t3.micro"
+      TF_VAR_key_name: "my-ec2-keypair"
+      TF_VAR_github_owner: "your-github-username"
+      TF_VAR_github_repo: "your-repo-name"
+      TF_VAR_github_branch: "main"
+      TF_VAR_codestar_connection_arn: "arn:aws:codeconnections:eu-north-1:429367298132:connection/..."
+      TF_VAR_instance_tag_key: "Name"
+      TF_VAR_instance_tag_value: "MyAppServer"
+      TF_VAR_codebuild_image: "aws/codebuild/standard:6.0"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
